@@ -6,7 +6,9 @@ defmodule TaskManagerWeb.TaskLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :tasks, Tasks.list_tasks())}
+    if connected?(socket), do: Tasks.subscribe()
+
+    {:ok, stream(socket, :tasks, Tasks.list_tasks()), temporary_assigns: [tasks: []]}
   end
 
   @impl true
@@ -34,7 +36,11 @@ defmodule TaskManagerWeb.TaskLive.Index do
 
   @impl true
   def handle_info({TaskManagerWeb.TaskLive.FormComponent, {:saved, task}}, socket) do
-    {:noreply, stream_insert(socket, :tasks, task)}
+    {:noreply, update(socket, :tasks, fn tasks -> [task | tasks] end)}
+  end
+
+  def handle_info({TaskManagerWeb.TaskLive.FormComponent, {:updated, task}}, socket) do
+    {:noreply, update(socket, :tasks, fn tasks -> [task | tasks] end)}
   end
 
   @impl true

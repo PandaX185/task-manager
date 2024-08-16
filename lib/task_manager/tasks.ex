@@ -18,7 +18,9 @@ defmodule TaskManager.Tasks do
 
   """
   def list_tasks do
-    Repo.all(Task)
+    Task
+    |> order_by(desc: :updated_at)
+    |> Repo.all()
   end
 
   @doc """
@@ -53,6 +55,7 @@ defmodule TaskManager.Tasks do
     %Task{}
     |> Task.changeset(attrs)
     |> Repo.insert()
+    |> broadcast(:saved)
   end
 
   @doc """
@@ -71,6 +74,7 @@ defmodule TaskManager.Tasks do
     task
     |> Task.changeset(attrs)
     |> Repo.update()
+    |> broadcast(:updated)
   end
 
   @doc """
@@ -100,5 +104,15 @@ defmodule TaskManager.Tasks do
   """
   def change_task(%Task{} = task, attrs \\ %{}) do
     Task.changeset(task, attrs)
+  end
+
+  def subscribe do
+    Phoenix.PubSub.subscribe(TaskManager.PubSub, "tasks")
+  end
+
+  defp broadcast({:error, _reason}=error,_event), do: error
+  defp broadcast({:ok, task},event) do
+    Phoenix.PubSub.broadcast(TaskManager.PubSub,"tasks", {event,task})
+    {:ok, task}
   end
 end
