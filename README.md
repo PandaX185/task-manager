@@ -1,5 +1,11 @@
 # TaskManager
 
+## Overview
+
+A simple task manager app using Phoenix and LiveView
+
+## Getting started
+
 To start your Phoenix server:
 
   * Run `mix setup` to install and setup dependencies
